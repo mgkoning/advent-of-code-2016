@@ -1,6 +1,4 @@
-﻿// Learn more about F# at http://fsharp.org
-// See the 'F# Tutorial' project for more help.
-open Microsoft.FSharp.Math
+﻿open Microsoft.FSharp.Math
 open System
 
 type Coordinate = {
@@ -20,6 +18,11 @@ type Turn = Left | Right
 type Direction = {
   turn: Turn
   blocks: int
+}
+
+let initialPosition = {
+  coordinate = { x = 0; y = 0 }
+  facing = North
 }
 
 let distanceFromOrigin coordinate =
@@ -65,6 +68,12 @@ let newPosition (current: Position) direction =
   { facing = newFacing;
     coordinate = newCoordinate current.coordinate newFacing direction.blocks }
 
+let finalCoordinate directions =
+  Array.fold newPosition initialPosition directions 
+
+let solution input =
+  distanceFromOrigin ((getDirections input) |> finalCoordinate).coordinate
+
 let normalize i = i / (abs i)
 
 let locations current facing blocks =
@@ -72,15 +81,6 @@ let locations current facing blocks =
   let factorY = factorY facing
   ([1 .. (abs factorX) * blocks] |> List.map (fun i -> { x = current.x + (normalize factorX) * i; y = current.y }))
   @ ([1 .. (abs factorY) * blocks] |> List.map (fun i -> { x = current.x; y = current.y + (normalize factorY) * i }))
-
-
-let initialPosition = {
-  coordinate = { x = 0; y = 0 }
-  facing = North
-}
-
-let finalCoordinate directions =
-  Array.fold newPosition initialPosition directions 
 
 let allPositions directions =
   let rec allPositionsHelper current directions allPositions =
@@ -92,15 +92,11 @@ let allPositions directions =
         allPositionsHelper nextPosition rest (allPositions@locations)
   allPositionsHelper initialPosition directions [initialPosition.coordinate]
 
-let rec findFirstDuplicate (candidates: Coordinate list) (alreadySeen: Coordinate list) =
+let rec findFirstDuplicate candidates alreadySeen =
   match candidates with
   | [] -> failwith "no duplicates found"
-  | candidate::rest when (List.exists (fun (c: Coordinate) -> c = candidate) alreadySeen) -> candidate
+  | candidate::rest when (List.exists (fun c -> c = candidate) alreadySeen) -> candidate
   | candidate::rest -> findFirstDuplicate rest (candidate::alreadySeen)
-
-let solution input =
-  distanceFromOrigin ((getDirections input) |> finalCoordinate).coordinate
-
 
 [<EntryPoint>]
 let main argv = 
