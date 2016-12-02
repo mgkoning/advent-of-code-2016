@@ -15,7 +15,7 @@ let instructionLines (text: string) = List.ofArray (text.Split([| "\r\n" |], Str
 
 type Direction = Up | Right | Down | Left
 
-type Keypad = One | Two | Three | Four | Five | Six | Seven | Eight | Nine
+type Keypad = One | Two | Three | Four | Five | Six | Seven | Eight | Nine | A | B | C | D
 
 let parseDirection character =
   match character with
@@ -34,15 +34,19 @@ let allInstructions text =
 
 let nextButton =
   function
-  | (One, Up) | (One, Left) | (Two, Left) | (Four, Up) -> One
-  | (One, Right) | (Three, Left) | (Two, Up) | (Five, Up) -> Two
-  | (Three, Right) | (Three, Up) | (Two, Right) | (Six, Up) -> Three
-  | (One, Down) | (Four, Left) | (Seven, Up) | (Five, Left) -> Four
-  | (Four, Right) | (Six, Left) | (Two, Down) | (Eight, Up) -> Five
-  | (Six, Right) | (Five, Right) | (Three, Down) | (Nine, Up) -> Six
-  | (Seven, Left) | (Eight, Left) | (Four, Down) | (Seven, Down) -> Seven
-  | (Eight, Down) | (Seven, Right) | (Nine, Left) | (Five, Down) -> Eight
-  | (Nine, Right) | (Nine, Down) | (Six, Down) | (Eight, Right) -> Nine
+  | (One, Up) | (One, Left) | (One, Right) | (Three, Up) -> One
+  | (Two, Left) | (Three, Left) | (Two, Up) | (Six, Up) -> Two
+  | (Two, Right) | (One, Down) | (Four, Left) | (Seven, Up) -> Three
+  | (Four, Up) | (Four, Right) | (Eight, Up) | (Three, Right) -> Four
+  | (Six, Left) | (Five, Left) | (Five, Down) | (Five, Up) -> Five
+  | (Seven, Left) | (Five, Right) | (Two, Down) | (A, Up) -> Six
+  | (B, Up) | (Eight, Left) | (Three, Down) | (Six, Right) -> Seven
+  | (Four, Down) | (Seven, Right) | (Nine, Left) | (C, Up) -> Eight
+  | (Nine, Right) | (Nine, Down) | (Nine, Up) | (Eight, Right) -> Nine
+  | (A, Left) | (A, Down) | (Six, Down) | (B, Left) -> A
+  | (A, Right) | (C, Left) | (D, Up) | (Seven, Down) -> B
+  | (C, Right) | (C, Down) | (Eight, Down) | (B, Right) -> C
+  | (B, Down) | (D, Left) | (D, Right) | (D, Down) -> D
 
 let visitedButtons startPoint directions =
   let rec visitedButtonsHelper directions startPoint =
@@ -72,6 +76,7 @@ let printKey =
   | One -> '1' | Two -> '2' | Three -> '3'
   | Four -> '4' | Five -> '5' | Six -> '6'
   | Seven -> '7' | Eight -> '8' | Nine -> '9'
+  | A -> 'A' | B -> 'B' | C -> 'C' | D -> 'D'
 
 [<EntryPoint>]
 let main argv = 
