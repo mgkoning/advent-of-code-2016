@@ -39,14 +39,23 @@ func filterByPossible(triangles []triangle) (possible []triangle, impossible []t
 func getTrianglesFromInput() []triangle {
 	input := getInput()
 	lines := strings.Split(input, "\n")
-	var triangles []triangle
-	for index := 0; index < len(lines); index++ {
-		triangles = append(triangles, parseTriangle(lines[index]))
+    var column1, column2, column3 []int64
+    for index := 0; index < len(lines); index++ {
+        var one, two, three = parseSides(lines[index])
+        column1 = append(column1, one)
+        column2 = append(column2, two)
+        column3 = append(column3, three)
 	}
+    sides := append(column1, append(column2, column3...)...)
+	var triangles []triangle
+    for index := 0; index < len(sides); index += 3 {
+        triangle := triangle{sides[index], sides[index+1], sides[index+2]}
+        triangles = append(triangles, triangle)
+    }
 	return triangles
 }
 
-func parseTriangle(line string) triangle {
+func parseSides(line string) (int64, int64, int64) {
 	splitted := strings.Split(line, " ")
 	var sides []int64
 	for index := 0; index < len(splitted); index++ {
@@ -60,7 +69,7 @@ func parseTriangle(line string) triangle {
 	if len(sides) != 3 {
 		panic(fmt.Sprintf("'%v' could not be parsed", line))
 	}
-	return triangle{sides[0], sides[1], sides[2]}
+	return sides[0], sides[1], sides[2]
 }
 
 func (triangle triangle) isPossible() bool {
