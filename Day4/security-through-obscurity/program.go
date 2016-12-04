@@ -10,6 +10,7 @@ import (
 
 type room struct {
 	name            string
+	decryptedName   string
 	sectorID        int64
 	checksum        string
 	correctChecksum string
@@ -26,12 +27,15 @@ func main() {
 	rooms := getRooms()
 	var sum int64
 	for _, room := range rooms {
+		if strings.Contains(room.decryptedName, "northpole") {
+			fmt.Printf("%v %v\n", room.decryptedName, room.sectorID)
+		}
 		if !room.isRealRoom() {
 			continue
 		}
 		sum += room.sectorID
 	}
-	fmt.Printf("%v", sum)
+	fmt.Printf("%v\n", sum)
 }
 
 func (room room) isRealRoom() bool {
@@ -56,10 +60,12 @@ func parseRoom(line string) room {
 	}
 	sectorID, err := strconv.ParseInt(matches[2], 10, 64)
 	check(err)
-	return room{name: matches[1],
+	roomName := matches[1]
+	return room{name: roomName,
+		decryptedName:   decryptRoomName(roomName, sectorID),
 		sectorID:        sectorID,
 		checksum:        matches[3],
-		correctChecksum: calculateCheckSum(matches[1])}
+		correctChecksum: calculateCheckSum(roomName)}
 }
 
 func calculateCheckSum(roomName string) string {
@@ -80,6 +86,28 @@ func calculateCheckSum(roomName string) string {
 		firstRunes[i] = v.codePoint
 	}
 	return string(firstRunes)
+}
+
+func decryptRoomName(roomName string, rotation int64) string {
+	normalizedRotation := int(rotation % 26)
+	var rotatedRunes []rune
+	for _, r := range roomName {
+		if r == '-' {
+			rotatedRunes = append(rotatedRunes, ' ')
+			continue
+		}
+		rotatedRunes = append(rotatedRunes, rotate(r, normalizedRotation))
+	}
+	return string(rotatedRunes)
+}
+
+func rotate(letter rune, rotation int) rune {
+	rotated := letter + rune(rotation)
+	pastZ := rotated - 'z'
+	if pastZ > 0 {
+		return 'a' + pastZ - 1
+	}
+	return rotated
 }
 
 type runeCount struct {
