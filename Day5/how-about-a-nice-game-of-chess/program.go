@@ -30,11 +30,11 @@ func main() {
 		index, err := strconv.ParseInt(string(indexAndRune[0]), 16, 64)
 		check(err)
 		if 7 < index {
-			fmt.Println("  ... but invalid position")
+			fmt.Println("  ... but invalid position, skipping")
 			continue
 		}
 		if passwordSoFar[index] != 0 {
-			fmt.Println("  ... but already filled")
+			fmt.Println("  ... but already filled, skipping")
 			continue
 		}
 		passwordSoFar[index] = indexAndRune[1]
