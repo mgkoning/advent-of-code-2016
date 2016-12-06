@@ -5,13 +5,6 @@ import (
 	"strings"
 )
 
-func check(err error) {
-	if err == nil {
-		return
-	}
-	panic(err)
-}
-
 func main() {
 	lines := strings.Split(getInput(), "\n")
 	totals := getTotals(lines)
@@ -32,9 +25,9 @@ func getTotals(lines []string) []map[string]int {
 			currentTotals := totals[i]
 			if currentTotals == nil {
 				currentTotals = make(map[string]int)
+				totals[i] = currentTotals
 			}
 			currentTotals[character]++
-			totals[i] = currentTotals
 		}
 	}
 	return totals
