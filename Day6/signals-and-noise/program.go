@@ -13,8 +13,17 @@ func check(err error) {
 }
 
 func main() {
-	input := getInput()
-	lines := strings.Split(input, "\n")
+	lines := strings.Split(getInput(), "\n")
+	totals := getTotals(lines)
+	mostFrequent, leastFrequent := determineMessages(totals)
+
+	fmt.Println("Message using most frequent character:")
+	fmt.Printf("\t%v\n", mostFrequent)
+	fmt.Println("Message using most least character:")
+	fmt.Printf("\t%v\n", leastFrequent)
+}
+
+func getTotals(lines []string) []map[string]int {
 	lineLength := len(lines[0])
 	totals := make([]map[string]int, lineLength)
 	for _, line := range lines {
@@ -28,26 +37,36 @@ func main() {
 			totals[i] = currentTotals
 		}
 	}
-	result := make([]string, lineLength)
-	for index, counts := range totals {
-		maxCount := 0
-		character := ""
-		for key, count := range counts {
-			if count <= maxCount {
-				continue
-			}
-			maxCount = count
-			character = key
-		}
-		result[index] = character
-	}
-	fmt.Printf("%v\n", strings.Join(result, ""))
-	fmt.Printf("%v\n", totals)
+	return totals
 }
 
-type charCount struct {
-	char  string
-	count int
+func determineMessages(charCountsPerPosition []map[string]int) (mostFrequent string, leastFrequent string) {
+	lineLength := len(charCountsPerPosition)
+	resultMostFrequent := make([]string, lineLength)
+	resultLeastFrequent := make([]string, lineLength)
+	for index, counts := range charCountsPerPosition {
+		resultMostFrequent[index], resultLeastFrequent[index] =
+			determineMostAndLeastFrequentCharacter(counts)
+	}
+	return strings.Join(resultMostFrequent, ""), strings.Join(resultLeastFrequent, "")
+}
+
+func determineMostAndLeastFrequentCharacter(charCounts map[string]int) (mostFrequent string, leastFrequent string) {
+	maxCount := 0
+	maxCharacter := ""
+	minCount := 10000
+	minCharacter := ""
+	for key, count := range charCounts {
+		if count > maxCount {
+			maxCount = count
+			maxCharacter = key
+		}
+		if count < minCount {
+			minCount = count
+			minCharacter = key
+		}
+	}
+	return maxCharacter, minCharacter
 }
 
 func getTestInput() string {
