@@ -17,14 +17,18 @@ func main() {
 	contents := readInput()
 	addresses := strings.Split(contents, "\n")
 	var supportingTLS []string
+	var supportingSSL []string
 	for _, address := range addresses {
-		if !supportsTLS(address) {
-			continue
+		sequences, hypernetSequences := parse(address)
+		if supportsTLS(sequences, hypernetSequences) {
+			supportingTLS = append(supportingTLS, address)
 		}
-		supportingTLS = append(supportingTLS, address)
-		fmt.Printf("Supports TLS: %v\n", address)
+		if supportSSL(sequences, hypernetSequences) {
+			supportingSSL = append(supportingSSL, address)
+		}
 	}
 	fmt.Printf("Addresses supporting TLS: %v\n", len(supportingTLS))
+	fmt.Printf("Addresses supporting SSL: %v\n", len(supportingSSL))
 }
 
 func readInput() string {
@@ -33,8 +37,7 @@ func readInput() string {
 	return string(data)
 }
 
-func supportsTLS(address string) bool {
-	sequences, hypernetSequences := parse(address)
+func supportsTLS(sequences [][]string, hypernetSequences [][]string) bool {
 	for _, sequence := range hypernetSequences {
 		if hasABBA(sequence) {
 			return false
@@ -43,6 +46,18 @@ func supportsTLS(address string) bool {
 	for _, sequence := range sequences {
 		if hasABBA(sequence) {
 			return true
+		}
+	}
+	return false
+}
+
+func supportSSL(sequences [][]string, hypernetSequences [][]string) bool {
+	ABAs := getABAs(sequences)
+	for _, ABA := range ABAs {
+		for _, sequence := range hypernetSequences {
+			if hasBAB(sequence, ABA) {
+				return true
+			}
 		}
 	}
 	return false
@@ -86,4 +101,23 @@ func hasABBA(sequence []string) bool {
 		}
 	}
 	return false
+}
+
+func getABAs(sequences [][]string) [][]string {
+	var ABAs [][]string
+	for _, sequence := range sequences {
+		for index := 0; index < len(sequence)-2; index++ {
+			if sequence[index] != sequence[index+1] &&
+				sequence[index] == sequence[index+2] {
+				foundABA := sequence[index : index+3]
+				ABAs = append(ABAs, foundABA)
+			}
+		}
+	}
+	return ABAs
+}
+
+func hasBAB(hypernetsequence []string, ABA []string) bool {
+	BAB := strings.Join([]string{ABA[1], ABA[0], ABA[1]}, "")
+	return strings.Contains(strings.Join(hypernetsequence, ""), BAB)
 }
