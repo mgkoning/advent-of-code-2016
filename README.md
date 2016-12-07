@@ -3,4 +3,4 @@ This repository contains solutions to puzzles from advent of code 2016 (http://a
 
 Day 1 & 2 written in F#, Microsoft's functional .NET language: http://fsharp.org
 
-Days 3-5 written in go, to learn how to use it. See https://golang.org.
+Days 3 and up written in go, so I can learn how to use it. See https://golang.org.
