@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func check(err error) {
@@ -34,12 +35,10 @@ func main() {
 	display := initializeDisplay()
 	showDisplay(display)
 	for instruction := range instructions {
-		if instruction == nil {
-			continue
-		}
 		fmt.Println(instruction)
 		display = instruction.execute(display)
 		showDisplay(display)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
