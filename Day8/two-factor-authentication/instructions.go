@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+)
 
 type instruction interface {
 	execute(screen [][]bool) [][]bool
@@ -61,4 +65,33 @@ func (rect rect) execute(screen [][]bool) [][]bool {
 		}
 	}
 	return screen
+}
+
+var rectRegexp = regexp.MustCompile(`rect (\d+)x(\d+)`)
+var rotateColumnRegexp = regexp.MustCompile(`rotate column x=(\d+) by (\d+)`)
+var rotateRowRegexp = regexp.MustCompile(`rotate row y=(\d+) by (\d+)`)
+
+func parseInstruction(line string) instruction {
+	if rectValues := rectRegexp.FindStringSubmatch(line); rectValues != nil {
+		return rect{columns: mustParseInt(rectValues[1]), rows: mustParseInt(rectValues[2])}
+	}
+	if rotateColumnValues := rotateColumnRegexp.FindStringSubmatch(line); rotateColumnValues != nil {
+		return rotateColumn{
+			columnIndex: mustParseInt(rotateColumnValues[1]),
+			rotations:   mustParseInt(rotateColumnValues[2]),
+		}
+	}
+	if rotateRowValues := rotateRowRegexp.FindStringSubmatch(line); rotateRowValues != nil {
+		return rotateRow{
+			rowIndex:  mustParseInt(rotateRowValues[1]),
+			rotations: mustParseInt(rotateRowValues[2]),
+		}
+	}
+	panic(fmt.Sprintf("Cannot understand '%v'", line))
+}
+
+func mustParseInt(s string) int {
+	val, err := strconv.ParseInt(s, 10, 32)
+	check(err)
+	return int(val)
 }
