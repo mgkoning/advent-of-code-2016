@@ -15,22 +15,24 @@ func check(err error) {
 	panic(err)
 }
 
+var debugging = false
+
 func main() {
 	file, err := ioutil.ReadFile("input.txt")
 	check(err)
-	decompressed := decompress(string(file))
-	fmt.Println(decompressed)
-	fmt.Printf("Decompressed length: %v\n", len(decompressed))
+	contents := string(file)
+	fmt.Printf("Decompressed length (v1): %v\n", decompressedLength(contents, false))
+	fmt.Printf("Decompressed length (v2): %v\n", decompressedLength(contents, true))
 }
 
-func decompress(compressedSequence string) string {
+func decompressedLength(compressedSequence string, recurse bool) int64 {
 	exploded := strings.Split(replaceWhitespace(compressedSequence), "")
-	result := make([]string, 0, len(exploded))
-	index := 0
-	for index < len(exploded) {
+	length := int64(0)
+	index := int64(0)
+	for index < int64(len(exploded)) {
 		current := exploded[index]
 		if current != "(" {
-			result = append(result, current)
+			length++
 			index++
 			continue
 		}
@@ -43,16 +45,19 @@ func decompress(compressedSequence string) string {
 			next = exploded[index]
 		}
 		index++
-		length, repeat := parseRepeatSpec(strings.Join(repeatSpec, ""))
-		toRepeat := exploded[index : index+length]
-		index += length
-		for n := 0; n < repeat; n++ {
-			for _, char := range toRepeat {
-				result = append(result, char)
-			}
+		repeatLength, repeatTimes := parseRepeatSpec(strings.Join(repeatSpec, ""))
+		toRepeat := exploded[index : index+repeatLength]
+		index += repeatLength
+		addedLength := int64(repeatLength)
+		if recurse {
+			addedLength = decompressedLength(strings.Join(toRepeat, ""), recurse)
 		}
+		length += repeatTimes * addedLength
 	}
-	return strings.Join(result, "")
+	if debugging {
+		fmt.Println("Sequence", compressedSequence, "has length", length)
+	}
+	return length
 }
 
 var whitespaceRegexp = regexp.MustCompile(`\s+`)
@@ -63,7 +68,7 @@ func replaceWhitespace(s string) string {
 
 var repeatSpecRegexp = regexp.MustCompile(`(\d+)x(\d+)`)
 
-func parseRepeatSpec(repeatSpec string) (int, int) {
+func parseRepeatSpec(repeatSpec string) (int64, int64) {
 	matches := repeatSpecRegexp.FindStringSubmatch(repeatSpec)
 	if matches == nil {
 		panic(fmt.Sprintf("Did not understand %v", repeatSpec))
@@ -71,8 +76,8 @@ func parseRepeatSpec(repeatSpec string) (int, int) {
 	return parseInt(matches[1]), parseInt(matches[2])
 }
 
-func parseInt(value string) int {
+func parseInt(value string) int64 {
 	val, err := strconv.ParseInt(value, 10, 32)
 	check(err)
-	return int(val)
+	return val
 }
