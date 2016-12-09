@@ -19,12 +19,7 @@ func main() {
 	file, err := ioutil.ReadFile("input.txt")
 	check(err)
 	decompressed := decompress(string(file))
-	decompressedAgain := decompress(decompressed)
-	for decompressed != decompressedAgain {
-		decompressed = decompressedAgain
-		decompressedAgain = decompress(decompressedAgain)
-	}
-	//fmt.Println(decompressed)
+	fmt.Println(decompressed)
 	fmt.Printf("Decompressed length: %v\n", len(decompressed))
 }
 
