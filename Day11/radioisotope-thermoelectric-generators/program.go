@@ -14,96 +14,94 @@ type move struct {
 	generators []string
 }
 
-type sequence struct {
-	resultState []floor
-	moves       []move
-	states      [][]floor
+type state struct {
+	currentFloor  int
+	numberOfMoves int
+	floors        []floor
+}
+
+func (state state) String() string {
+	result := fmt.Sprintf("E%v", state.currentFloor)
+	for i, floor := range state.floors {
+		result += fmt.Sprintf("F%vG%vM%v", i, floor.generators, floor.microchips)
+	}
+	return result
 }
 
 func main() {
-	startState := getStartStateExample()
-	possibleMoves := determinePossibleMoves(startState, 0, 1)
-	sequences := make([]sequence, 0)
-	for _, possibleMove := range possibleMoves {
-		resultState := doMove(possibleMove, startState)
-		if isBadState(resultState) {
-			continue
-		}
-		fmt.Println("Adding move ", possibleMove)
-		sequences = append(sequences, sequence{resultState: resultState, moves: []move{possibleMove}, states: [][]floor{resultState}})
-	}
-	var winner sequence
-	advancements := 0
-	for {
-		fmt.Println("Sequences to consider: ", len(sequences))
-		seq, found := findWinner(sequences)
-		if found {
-			winner = seq
+	var answer = determineAnswer()
+	fmt.Println(answer.floors)
+	fmt.Println("# moves: ", answer.numberOfMoves)
+}
+
+func determineAnswer() state {
+	var seenStates = make(map[string]state)
+	var statesToConsider = make([]state, 0)
+
+	startFloors := getStartState()
+	totalObjects := countObjects(startFloors)
+	initialState := state{currentFloor: 0, numberOfMoves: 0, floors: startFloors}
+	seenStates[initialState.String()] = initialState
+	fmt.Println(initialState.String())
+	statesToConsider = append(statesToConsider, initialState)
+
+	for iterations := 0; ; iterations++ {
+		if len(statesToConsider) == 0 {
 			break
 		}
-		sequences = advance(sequences)
-		advancements++
-		fmt.Println("Advancements: ", advancements)
-		if len(sequences) == 0 {
-			panic("No more moves to consider!")
-		}
-	}
-	fmt.Println("Winning sequence: ", winner.moves)
-	state := startState
-	for i, move := range winner.moves {
-		state = doMove(move, state)
-		fmt.Println("State after move ", i, ": ", state)
-	}
-	fmt.Println(winner.resultState)
-	fmt.Println("# moves: ", len(winner.moves))
-}
+		curState := statesToConsider[0]
+		statesToConsider = statesToConsider[1:]
 
-func findWinner(sequences []sequence) (sequence, bool) {
-	for _, seq := range sequences {
-		if done(seq.resultState) {
-			return seq, true
-		}
-	}
-	return sequence{}, false
-}
-
-func advance(sequences []sequence) []sequence {
-	newSituation := make([]sequence, 0)
-	for _, seq := range sequences {
-		theMove := seq.moves[len(seq.moves)-1]
-
-		currentFloor := theMove.toFloor
-		for _, nextFloor := range []int{currentFloor + 1, currentFloor - 1} {
+		for _, nextFloor := range []int{curState.currentFloor - 1, curState.currentFloor + 1} {
 			if nextFloor < 0 || 3 < nextFloor {
 				continue
 			}
-			possibleMoves := determinePossibleMoves(seq.resultState, currentFloor, nextFloor)
+			possibleMoves := determinePossibleMoves(curState.floors, curState.currentFloor, nextFloor)
 			for _, possibleMove := range possibleMoves {
-				resultState := doMove(possibleMove, seq.resultState)
-				if isBadState(resultState) {
+				resultFloors := doMove(possibleMove, curState.floors)
+				objectCount := countObjects(resultFloors)
+				if objectCount != totalObjects {
+					fmt.Println("offending move", possibleMove)
+					fmt.Println("before", curState.floors)
+					fmt.Println("after", resultFloors)
+					panic(fmt.Sprint("Mismatched count of ", objectCount, " rather than ", totalObjects))
+				}
+				nextState := state{currentFloor: possibleMove.toFloor, numberOfMoves: curState.numberOfMoves + 1, floors: resultFloors}
+				if isBadState(resultFloors) {
 					continue
 				}
-				if seenBefore(seq.states, resultState) {
+				var stateName = nextState.String()
+				var _, seen = seenStates[stateName]
+				if seen {
 					continue
 				}
-				newMoves := make([]move, len(seq.moves), len(seq.moves)+1)
-				copy(newMoves, seq.moves)
-				newMoves = append(newMoves, possibleMove)
-				newStates := make([][]floor, len(seq.states), len(seq.states)+1)
-				copy(newStates, seq.states)
-				newStates = append(newStates, resultState)
-				newSequence := sequence{resultState: resultState, moves: newMoves, states: newStates}
-				newSituation = append(newSituation, newSequence)
+				seenStates[stateName] = nextState
+				// if seenBefore(visitedStates, nextState) {
+				// 	continue
+				// }
+				if done(nextState.floors) {
+					fmt.Println("Found winner after #moves: ", nextState.numberOfMoves)
+					return nextState
+				}
+				statesToConsider = append(statesToConsider, nextState)
 			}
 		}
 	}
-	return newSituation
+	panic("no winner found")
+}
+
+func countObjects(floors []floor) int {
+	count := 0
+	for _, floor := range floors {
+		count += len(floor.generators) + len(floor.microchips)
+	}
+	return count
 }
 
 func getStartState() []floor {
 	return []floor{
-		floor{microchips: []string{"strontium", "plutonium"}, generators: []string{"strontium", "plutonium"}},
-		floor{microchips: []string{"ruthenium", "curium"}, generators: []string{"thulium", "ruthenium", "curium"}},
+		floor{microchips: []string{"plutonium", "strontium"}, generators: []string{"plutonium", "strontium"}},
+		floor{microchips: []string{"curium", "ruthenium"}, generators: []string{"curium", "ruthenium", "thulium"}},
 		floor{microchips: []string{"thulium"}},
 		floor{},
 	}
@@ -141,8 +139,6 @@ func determinePossibleMoves(state []floor, fromFloor int, toFloor int) []move {
 		return moves
 	}
 	for _, microchip := range currentFloor.microchips {
-		candidate := move{fromFloor: fromFloor, toFloor: toFloor, microchips: []string{microchip}}
-		moves = append(moves, candidate)
 		for _, microchip2 := range currentFloor.microchips {
 			if microchip == microchip2 {
 				continue
@@ -150,10 +146,10 @@ func determinePossibleMoves(state []floor, fromFloor int, toFloor int) []move {
 			candidate := move{fromFloor: fromFloor, toFloor: toFloor, microchips: []string{microchip, microchip2}}
 			moves = append(moves, candidate)
 		}
+		candidate := move{fromFloor: fromFloor, toFloor: toFloor, microchips: []string{microchip}}
+		moves = append(moves, candidate)
 	}
 	for _, generator := range currentFloor.generators {
-		candidate := move{fromFloor: fromFloor, toFloor: toFloor, generators: []string{generator}}
-		moves = append(moves, candidate)
 		for _, generator2 := range currentFloor.generators {
 			if generator == generator2 {
 				continue
@@ -161,6 +157,8 @@ func determinePossibleMoves(state []floor, fromFloor int, toFloor int) []move {
 			candidate := move{fromFloor: fromFloor, toFloor: toFloor, generators: []string{generator, generator2}}
 			moves = append(moves, candidate)
 		}
+		candidate := move{fromFloor: fromFloor, toFloor: toFloor, generators: []string{generator}}
+		moves = append(moves, candidate)
 	}
 	for _, microchip := range currentFloor.microchips {
 		for _, generator := range currentFloor.generators {
@@ -179,7 +177,9 @@ func determinePossibleMoves(state []floor, fromFloor int, toFloor int) []move {
 func doMove(move move, startState []floor) []floor {
 	newState := copyState(startState)
 	newState[move.toFloor].generators = append(newState[move.toFloor].generators, move.generators...)
+	//sort.Strings(newState[move.toFloor].generators)
 	newState[move.toFloor].microchips = append(newState[move.toFloor].microchips, move.microchips...)
+	//sort.Strings(newState[move.toFloor].microchips)
 	newState[move.fromFloor].generators = remove(newState[move.fromFloor].generators, move.generators)
 	newState[move.fromFloor].microchips = remove(newState[move.fromFloor].microchips, move.microchips)
 	return newState
@@ -188,6 +188,14 @@ func doMove(move move, startState []floor) []floor {
 func copyState(state []floor) []floor {
 	resultState := make([]floor, 4)
 	copy(resultState, state)
+	for i := range resultState {
+		resultMicrochips := make([]string, len(state[i].microchips))
+		copy(resultMicrochips, state[i].microchips)
+		resultState[i].microchips = resultMicrochips
+		resultGenerators := make([]string, len(state[i].generators))
+		copy(resultGenerators, state[i].generators)
+		resultState[i].generators = resultGenerators
+	}
 	return resultState
 }
 
@@ -205,7 +213,7 @@ func remove(before []string, toRemove []string) []string {
 	return result
 }
 
-func seenBefore(previous [][]floor, new []floor) bool {
+func seenBefore(previous []state, new state) bool {
 	for _, prv := range previous {
 		if isSameState(prv, new) {
 			return true
@@ -214,12 +222,15 @@ func seenBefore(previous [][]floor, new []floor) bool {
 	return false
 }
 
-func isSameState(previous []floor, new []floor) bool {
-	for i := range previous {
-		if !areSame(previous[i].generators, new[i].generators) {
+func isSameState(previous state, new state) bool {
+	if previous.currentFloor != new.currentFloor {
+		return false
+	}
+	for i := range previous.floors {
+		if !areSame(previous.floors[i].generators, new.floors[i].generators) {
 			return false
 		}
-		if !areSame(previous[i].microchips, new[i].microchips) {
+		if !areSame(previous.floors[i].microchips, new.floors[i].microchips) {
 			return false
 		}
 	}
