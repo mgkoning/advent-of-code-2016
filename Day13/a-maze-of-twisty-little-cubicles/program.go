@@ -12,11 +12,20 @@ type coordinate struct {
 func main() {
 	start := coordinate{1, 1}
 	goal := coordinate{31, 39}
-	fmt.Println("goal reached after steps:", minDistance(start, goal))
+	goalReached, seen := minDistance(start, goal)
+	fmt.Println("goal reached after steps:", goalReached)
+	distinctLocations := 0
+	for _, n := range seen {
+		if 50 < n {
+			continue
+		}
+		distinctLocations++
+	}
+	fmt.Println("distinct locations visited:", distinctLocations)
 }
 
-func minDistance(start coordinate, goal coordinate) int {
-	seen := make(map[coordinate]int)
+func minDistance(start coordinate, goal coordinate) (goalReached int, seen map[coordinate]int) {
+	seen = make(map[coordinate]int)
 	toVisit := make([]coordinate, 0)
 	toVisit = append(toVisit, start)
 	seen[start] = 0
@@ -36,7 +45,7 @@ func minDistance(start coordinate, goal coordinate) int {
 				continue
 			}
 			if neighbor == goal {
-				return neighborDistance
+				return neighborDistance, seen
 			}
 			seen[neighbor] = neighborDistance
 			toVisit = append(toVisit, neighbor)
