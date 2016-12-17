@@ -20,6 +20,20 @@ func main() {
 	fmt.Println("Shortest path example 3:", shortestPath(passcodeExample3))
 	// DRURDRUDDLLDLUURRDULRLDUUDDDRR
 	fmt.Println("Shortest path puzzle:", shortestPath(puzzlePasscode))
+
+	// part 2
+	fmt.Println("Longest path example 1:", getLongestPath(allPaths(passcodeExample1)))
+	// 370
+	fmt.Println("Longest path example 2:", getLongestPath(allPaths(passcodeExample2)))
+	// 492
+	fmt.Println("Longest path example 3:", getLongestPath(allPaths(passcodeExample3)))
+	// 830
+	fmt.Println("Longest path puzzle:", getLongestPath(allPaths(puzzlePasscode)))
+}
+
+// assume sorted
+func getLongestPath(paths []string) int {
+	return len(paths[len(paths)-1])
 }
 
 type position struct {
@@ -52,6 +66,31 @@ func shortestPath(passcode string) string {
 			nodesToVisit = append(nodesToVisit, step{newPath, newPosition})
 		}
 	}
+}
+
+func allPaths(passcode string) []string {
+	startPosition := position{0, 0}
+	nodesToVisit := make([]step, 1, 16)
+	nodesToVisit[0] = step{"", startPosition}
+	foundPaths := make([]string, 0)
+	for len(nodesToVisit) > 0 {
+		here := nodesToVisit[0]
+		nodesToVisit = nodesToVisit[1:]
+		allowedDirections := getAllowedDirections(getMd5Prefix(passcode, here.path))
+		for _, direction := range allowedDirections {
+			newPosition := determinePosition(here.position, direction)
+			if isOutside(newPosition) {
+				continue
+			}
+			newPath := here.path + direction
+			if newPosition.x == roomSize && newPosition.y == roomSize {
+				foundPaths = append(foundPaths, newPath)
+				continue
+			}
+			nodesToVisit = append(nodesToVisit, step{newPath, newPosition})
+		}
+	}
+	return foundPaths
 }
 
 func isOutside(p position) bool {
