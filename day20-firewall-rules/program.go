@@ -22,7 +22,7 @@ func main() {
 		normalizedRules = normalize(normalizedRules, r)
 	}
 	fmt.Println("Answer part 1:", normalizedRules[0].to+1)
-	allowedIps := normalizedRules[0].from - 0
+	allowedIps := normalizedRules[0].from
 	for i := 0; i < len(normalizedRules)-1; i++ {
 		allowedIps += normalizedRules[i+1].from - 1 - normalizedRules[i].to
 	}
