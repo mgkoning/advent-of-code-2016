@@ -71,19 +71,13 @@ func (l letterRotate) execute(input []string) []string {
 func (l letterRotate) reverse(input []string) []string {
 	letterIndex := getLetterIndex(input, l.x)
 	var rotation int
+	if letterIndex < 1 {
+		letterIndex += 8
+	}
 	if letterIndex%2 == 1 {
 		rotation = -1 * ((letterIndex + 1) / 2)
 	} else {
-		switch letterIndex {
-		case 0:
-			rotation = -9
-		case 2:
-			rotation = -6
-		case 4:
-			rotation = -7
-		case 6:
-			rotation = -8
-		}
+		rotation = -5 - (letterIndex / 2)
 	}
 	return rotate{rotation}.execute(input)
 }
