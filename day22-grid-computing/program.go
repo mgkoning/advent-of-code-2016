@@ -53,21 +53,24 @@ func determineViablePairs(nodeChannel chan node, nodes []node, sumChannel chan i
 		if !ok {
 			break
 		}
-		viablePairs := 0
-		if nodeToProcess.used == 0 {
-			sumChannel <- viablePairs
+		sumChannel <- determineViablePairsForNode(nodeToProcess, nodes)
+	}
+}
+
+func determineViablePairsForNode(node node, nodes []node) int {
+	viablePairs := 0
+	if node.used == 0 {
+		return viablePairs
+	}
+	for _, n := range nodes {
+		if node.location == n.location {
 			continue
 		}
-		for _, node := range nodes {
-			if node.location == nodeToProcess.location {
-				continue
-			}
-			if nodeToProcess.used <= node.available {
-				viablePairs++
-			}
+		if node.used <= n.available {
+			viablePairs++
 		}
-		sumChannel <- viablePairs
 	}
+	return viablePairs
 }
 
 var dfLineRegexp = regexp.MustCompile(`/dev/grid/node-x(\d+)-y(\d+)\s+(\d+)T\s+(\d+)T\s+(\d+)T\s+(\d+)%`)
