@@ -20,11 +20,16 @@ func check(err error) {
 	panic(err)
 }
 
-var showOutput = true
+var showOutput = false
+var doOptimized = true
 
 func main() {
+	startA := 12
+	if doOptimized {
+		fmt.Printf("Input = %v\n", fac(startA)+75*88)
+		return
+	}
 	instructions := getInstructions()
-	startA := 7
 	currentState := state{
 		codePointer: 0,
 		registers: map[string]int{
@@ -33,8 +38,16 @@ func main() {
 	}
 	for currentState.codePointer < len(instructions) {
 		currentState = execute(instructions[currentState.codePointer], currentState, instructions)
-		fmt.Println(currentState)
 	}
+	fmt.Println(currentState)
+
+}
+
+func fac(n int) int {
+	if n == 1 {
+		return 1
+	}
+	return n * fac(n-1)
 }
 
 func execute(instruction string, state state, instructions []string) state {
@@ -112,9 +125,18 @@ func toggle(state state, offset string, instructions []string) state {
 	}
 	if 0 <= instructionIndex && instructionIndex < len(instructions) {
 		instructions[instructionIndex] = toggleInstruction(instructions[instructionIndex])
+		printCode(instructions)
 	}
 	state.codePointer++
 	return state
+}
+
+func printCode(instructions []string) {
+	fmt.Println("-- start --")
+	for _, i := range instructions {
+		fmt.Println(i)
+	}
+	fmt.Println("-- end --")
 }
 
 var instructionRegexp = regexp.MustCompile(`^(dec|inc|cpy|jnz|tgl)`)

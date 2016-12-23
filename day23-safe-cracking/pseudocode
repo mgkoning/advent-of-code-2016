@@ -1,0 +1,73 @@
+a = 12
+b, c, d = 0
+
+b = a
+b--
+while (true) {
+    d = a
+    a = 0 // 0, 11, 0, 12
+    while d > 0 {
+        c = b
+        while c > 0 {
+            a++
+            c--
+        } // jnz c -2
+        d--
+    } // jnz d -5
+    // a = d * b = 12 * 11 = 132 ; 132, 11, 0, 0
+    b--
+    c = b
+    d = c // 132, 10, 10, 10
+    while d > 0 {
+        d--
+        c++
+    } // jnz d -2
+    // c += 10 ; 132, 10, 20, 0
+    tgl c (noop)
+    c = -16 ; 132, 10, -16, 0
+}
+
+///
+
+a = 12
+b, c, d = 0
+
+b = a
+b--
+while b > 1 {
+    a *= b
+    b--
+    c = 2*b
+    // magic ... 
+    // inc c -> dec c (25)
+    // inc d -> dec d (23)
+    // jnz 88 d -> cpy 88 d (21)
+    // jnz 1 c -> cpy 1 c (19)
+}
+c = -16
+c = 1
+c = 75
+while c > 0 {
+    d = 88
+    while d > 0 {
+        a++
+        d--
+    }
+    c--
+}
+a += 75*88
+
+///
+
+a = 12
+b = a
+b--
+while b > 1 {
+    a *= b
+    b--
+}
+a += 75*88
+
+///
+
+-> a -> a!+6600
