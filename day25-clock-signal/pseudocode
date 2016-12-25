@@ -1,0 +1,122 @@
+cpy a d
+cpy 4 c
+cpy 633 b
+inc d
+dec b
+jnz b -2
+dec c
+jnz c -5
+cpy d a
+jnz 0 0
+cpy a b
+cpy 0 a
+cpy 2 c
+jnz b 2
+jnz 1 6
+dec b
+dec c
+jnz c -4
+inc a
+jnz 1 -7
+cpy 2 b
+jnz c 2
+jnz 1 4
+dec b
+dec c
+jnz 1 -4
+jnz 0 0
+out b
+jnz a -19
+jnz 1 -21
+
+//// pass 1
+
+d = a
+c = 4
+while c > 0 {
+    b = 633
+    while b > 0 {
+        d++
+        b--
+    }
+    c--
+}
+while true {
+    a = d
+    label3:
+    noop (? jnz 0 0)
+    b = a
+    a = 0
+    while true {
+        c = 2
+        while c > 0
+            if b == 0 {
+                goto label1
+            }
+            b--
+            c--
+        }
+        a++
+    }
+    label1:  // once we get here, c can only be 1 or 2;
+             // it must alternate between those to make sure b alternates 0 and 1
+    b = 2
+    while true {
+        if c == 0 {
+            goto label2
+        }
+        b--
+        c--
+    }
+    label2:
+    noop (? jnz 0 0)
+    out b
+    if a != 0 {
+        goto label3
+    }
+}
+
+/// pass 2
+
+d = a + 2532 ; a: 1; b: 0; c: 0; d: 2533
+while true {
+    a = d ; a:2533; b:0; c:0; d: 2533
+    label3:
+    b = a ; a: 2533; b: 2533; c: 0; d: 2533
+    a = 0 ; a: 0
+    while true {
+        c = 2
+        while c > 0
+            if b == 0 {
+                goto label1
+            }
+            b-- ; 2529
+            c-- ; 0
+        }
+        a++ ; 2
+    }
+    // a: a / 2     ; 1266 ; 633 ; 316 ; 158 ; 79 ; 39 ; 19 ; 9 ; 4 ; 2 ; 1 ; 0
+    // c: 1 + a % 2 ; 2    ; 1   ; 2   ; 1   ; 1  ;  2 ;  2 ; 2 ; 2 ; 1 ; 1 ; 1
+    label1:
+    b = 2
+    while true {
+        if c == 0 {
+            goto label2
+        }
+        b--
+        c--
+    }
+    label2:
+    out b
+    if a != 0 {
+        goto label3
+    }
+}
+
+
+
+0 1 2 5 10 21 42 85 170 341 682 1365 2730  
+0 1 0 1  0  1  0  1   0   1   0    1    0  
+
+2730 - 2532 = 198
+2730 in binary: 1010 1010 1010
